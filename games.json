@@ -1,6 +1,52 @@
 {
   "sourcePage": "https://nol.yanolja.com/ticket/genre/sports/bears",
-  "updatedAt": null,
-  "totalElements": 0,
-  "games": []
+  "updatedAt": "2026-07-13T16:41:01.171150+00:00",
+  "totalElements": 3,
+  "games": [
+    {
+      "goodsCode": "26004548",
+      "goodsName": "두산 vs 삼성 (7.24)",
+      "playDate": "2026-07-24",
+      "playTime": "18:30",
+      "homeTeam": "두산베어스",
+      "awayTeam": "삼성 라이온즈",
+      "placeName": "잠실야구장",
+      "bookingOpenTime": "2026-07-17T11:00:00",
+      "bookingEndTime": "2026-07-24T19:30:00",
+      "preBookingName": null,
+      "preBookingOpenTime": null,
+      "preBookingEndTime": null,
+      "posterImageUrl": "https://ticketimage.interpark.com/Play/image/large/26/26004548_p.gif"
+    },
+    {
+      "goodsCode": "26004549",
+      "goodsName": "두산 vs 삼성 (7.25)",
+      "playDate": "2026-07-25",
+      "playTime": "18:00",
+      "homeTeam": "두산베어스",
+      "awayTeam": "삼성 라이온즈",
+      "placeName": "잠실야구장",
+      "bookingOpenTime": "2026-07-18T11:00:00",
+      "bookingEndTime": "2026-07-25T19:00:00",
+      "preBookingName": null,
+      "preBookingOpenTime": null,
+      "preBookingEndTime": null,
+      "posterImageUrl": "https://ticketimage.interpark.com/Play/image/large/26/26004549_p.gif"
+    },
+    {
+      "goodsCode": "26004550",
+      "goodsName": "두산 vs 삼성 (7.26)",
+      "playDate": "2026-07-26",
+      "playTime": "18:00",
+      "homeTeam": "두산베어스",
+      "awayTeam": "삼성 라이온즈",
+      "placeName": "잠실야구장",
+      "bookingOpenTime": "2026-07-19T11:00:00",
+      "bookingEndTime": "2026-07-26T19:00:00",
+      "preBookingName": null,
+      "preBookingOpenTime": null,
+      "preBookingEndTime": null,
+      "posterImageUrl": "https://ticketimage.interpark.com/Play/image/large/26/26004550_p.gif"
+    }
+  ]
 }
