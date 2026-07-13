@@ -1,4 +1,4 @@
-name: 두산 경기정보 자동 갱신
+name: 두산·키움 경기정보 자동 갱신
 
 on:
   workflow_dispatch:
@@ -21,9 +21,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: 경기정보 추출
-        run: |
-          python extract_games.py
+      - name: 두산·키움 경기정보 추출
+        run: python extract_games.py
 
       - name: 변경사항 저장
         run: |
@@ -37,5 +36,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "자동 경기정보 갱신"
+          git commit -m "두산·키움 경기정보 자동 갱신"
           git push
