@@ -1,1 +1,41 @@
+name: 두산 경기정보 자동 갱신
 
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-games:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 내려받기
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 경기정보 추출
+        run: |
+          python extract_games.py
+
+      - name: 변경사항 저장
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add games.json
+
+          if git diff --cached --quiet; then
+            echo "변경 없음"
+            exit 0
+          fi
+
+          git commit -m "자동 경기정보 갱신"
+          git push
