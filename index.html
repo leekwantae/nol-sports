@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>두산 베어스 경기·예매 일정</title>
+<style>
+:root{
+  --bg:#f3f6fa;--card:#fff;--text:#172033;--muted:#6d7788;
+  --line:#dfe5ee;--navy:#162d4d;--navy2:#315b8d;
+  --green:#14734a;--yellow:#956400;--gray:#677284;--red:#c53a45;
+  --shadow:0 10px 28px rgba(25,42,70,.09)
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Pretendard,"Noto Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{width:min(1160px,calc(100% - 24px));margin:auto;padding:20px 0 46px}
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:22px;padding:27px;box-shadow:var(--shadow)}
+h1{margin:0;font-size:clamp(27px,4vw,40px);letter-spacing:-.04em}
+.sub{margin:10px 0 0;color:rgba(255,255,255,.8);line-height:1.65}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}
+button,a.button{height:45px;padding:0 17px;border-radius:12px;border:1px solid rgba(255,255,255,.25);font:inherit;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;text-decoration:none}
+button{background:#fff;color:var(--navy)}
+a.button{background:rgba(255,255,255,.12);color:#fff}
+.status{margin:18px 0;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px 17px;box-shadow:0 5px 18px rgba(25,42,70,.05);display:flex;justify-content:space-between;gap:12px;align-items:center}
+#status{font-weight:900}.ok{color:var(--green)}.warn{color:var(--yellow)}.err{color:var(--red)}
+#updated{font-size:13px;color:var(--muted);text-align:right}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 5px 18px rgba(25,42,70,.05)}
+.stat span{font-size:13px;color:var(--muted)}.stat strong{display:block;margin-top:7px;font-size:22px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.scroll{overflow-x:auto}
+table{width:100%;min-width:960px;border-collapse:collapse}
+th,td{padding:14px 12px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:#eef3f8;color:#40506a;font-size:13px}td{font-size:14px}
+td.match{text-align:left;font-weight:900}
+.badge{display:inline-flex;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900}
+.open{background:#def6e9;color:#0f6c3f}.soon{background:#fff0c9;color:#835900}.closed{background:#edf0f4;color:#687386}
+.empty{padding:50px 20px;text-align:center;color:var(--muted)}
+.note{margin-top:16px;padding:14px 16px;border-radius:14px;background:#eef6ff;border:1px solid #cddff5;color:#385573;font-size:13px;line-height:1.65}
+@media(max-width:760px){
+  .summary{grid-template-columns:1fr 1fr}.status{flex-direction:column;align-items:flex-start}#updated{text-align:left}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+<section class="hero">
+  <h1>두산 베어스 경기·예매 일정</h1>
+  <p class="sub">GitHub Actions가 NOL 두산 페이지를 주기적으로 읽어 최신 경기정보를 자동 반영합니다.</p>
+  <div class="actions">
+    <button id="refresh">화면 새로고침</button>
+    <a class="button" href="https://nol.yanolja.com/ticket/genre/sports/bears" target="_blank" rel="noopener">NOL 두산 페이지</a>
+  </div>
+</section>
+
+<section class="status">
+  <div id="status" class="warn">경기정보를 불러오는 중…</div>
+  <div id="updated">데이터 갱신: -</div>
+</section>
+
+<section class="summary">
+  <div class="stat"><span>표시 경기</span><strong id="total">0</strong></div>
+  <div class="stat"><span>예매 가능</span><strong id="openCount">0</strong></div>
+  <div class="stat"><span>예매 예정</span><strong id="soonCount">0</strong></div>
+  <div class="stat"><span>가장 가까운 경기</span><strong id="nextGame">-</strong></div>
+</section>
+
+<section class="panel">
+<div class="scroll">
+<table>
+<thead>
+<tr>
+  <th>경기일</th><th>시간</th><th>경기</th><th>구장</th>
+  <th>선예매</th><th>일반예매</th><th>예매 상태</th><th>경기코드</th>
+</tr>
+</thead>
+<tbody id="body"></tbody>
+</table>
+</div>
+<div id="empty" class="empty">표시할 경기가 없습니다.</div>
+</section>
+
+<div class="note">
+이 페이지는 저장소의 <b>games.json</b>을 읽습니다. GitHub Actions 예약 실행은 정확히 정각에 실행되지 않고 다소 지연될 수 있습니다.
+</div>
+</main>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let games=[];
+
+function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function fmtDate(v){
+  if(!v)return"-";
+  return new Intl.DateTimeFormat("ko-KR",{month:"numeric",day:"numeric",weekday:"short"}).format(new Date(v+"T00:00:00"))
+}
+function fmtDT(v){
+  if(!v)return"-";
+  const d=new Date(v.replace(" ","T"));
+  if(Number.isNaN(d.getTime()))return v;
+  return new Intl.DateTimeFormat("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}).format(d)
+}
+function stateOf(g){
+  const now=new Date(),open=g.bookingOpenTime?new Date(g.bookingOpenTime):null,end=g.bookingEndTime?new Date(g.bookingEndTime):null;
+  if(open&&now<open)return{key:"soon",text:"예매 예정"};
+  if((!open||now>=open)&&(!end||now<=end))return{key:"open",text:"예매 가능"};
+  return{key:"closed",text:"예매 종료"}
+}
+function render(){
+  $("body").innerHTML="";
+  for(const g of games){
+    const st=stateOf(g),tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${esc(fmtDate(g.playDate))}</td>
+      <td><b>${esc(g.playTime||"-")}</b></td>
+      <td class="match">${esc(g.homeTeam||"두산 베어스")} vs ${esc(g.awayTeam||"상대팀")}</td>
+      <td>${esc(g.placeName||"-")}</td>
+      <td>${esc(fmtDT(g.preBookingOpenTime))}</td>
+      <td>${esc(fmtDT(g.bookingOpenTime))}</td>
+      <td><span class="badge ${st.key}">${st.text}</span></td>
+      <td>${esc(g.goodsCode||"-")}</td>`;
+    $("body").appendChild(tr)
+  }
+
+  $("empty").style.display=games.length?"none":"block";
+  $("total").textContent=games.length;
+  const states=games.map(stateOf);
+  $("openCount").textContent=states.filter(x=>x.key==="open").length;
+  $("soonCount").textContent=states.filter(x=>x.key==="soon").length;
+
+  const now=new Date();
+  const next=games.find(g=>g.playDate&&new Date(`${g.playDate}T${g.playTime||"00:00"}:00`)>=now);
+  $("nextGame").textContent=next?fmtDate(next.playDate):"-";
+}
+async function load(){
+  $("status").textContent="최신 저장 데이터를 불러오는 중…";
+  $("status").className="warn";
+  try{
+    const res=await fetch(`games.json?t=${Date.now()}`,{cache:"no-store"});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    games=Array.isArray(data.games)?data.games:[];
+    render();
+    $("status").textContent=`경기 ${games.length}건을 불러왔습니다.`;
+    $("status").className="ok";
+    $("updated").textContent="데이터 갱신: "+new Intl.DateTimeFormat("ko-KR",{
+      year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false
+    }).format(new Date(data.updatedAt));
+  }catch(e){
+    games=[];render();
+    $("status").textContent="games.json을 불러오지 못했습니다.";
+    $("status").className="err";
+    $("updated").textContent="오류: "+e.message;
+  }
+}
+$("refresh").addEventListener("click",load);
+load();
+setInterval(load,60000);
+</script>
+</body>
+</html>
